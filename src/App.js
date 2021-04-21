@@ -1,71 +1,65 @@
 import React, { useState } from 'react';
 
-const Button = ({ handleClick, text }) => <button onClick={handleClick}>{text}</button>;
-
-const Statistic = ({ text, value }) => {
-  return (
-    <table>
-      <tbody>
-        <tr>
-          <td>{text}</td>
-          <td>{value}</td>
-        </tr>
-      </tbody>
-    </table>
-  );
-};
-
-const Statistics = ({ good, neutral, bad}) => {
-
-  const sum = good + neutral + bad;
-
-  const average = (good - bad) / sum > 0 ? (good - bad) / sum : 'Not a number';
-  
-  const positive = good/sum * 100 + '%';
-
-  if(sum <= 0){
-    return <Statistic text="No feedback given" />
-  }
-
-  return(
-    <>
-      <Statistic text="good" value={good} />
-      <Statistic text="neutral" value={neutral} />
-      <Statistic text="bad" value={bad} />
-      <Statistic text="all" value={sum} />
-      <Statistic text="average:" value={average} />
-      <Statistic text="positive:" value={positive} />
-      </>
-  )
-}
-
-const App = () => {
-  // Defining each componet's state separately
-
-  // const [good, setGood] = useState(0);
-  // const [neutral, setNeutral] = useState(0);
-  // const [bad, setBad] = useState(0);
-
-  // const handleGood = () => setGood(good + 1);
-  // const handleNeutral = () => setNeutral(neutral + 1);
-  // const handleBad = () => setBad(bad + 1);
-
-  const [stat, setStat] = useState({ good: 0, neutral: 0, bad: 0 });
-
-  const handleGood = () => setStat({ ...stat, good: stat.good + 1 });
-  const handleNeutral = () => setStat({ ...stat, neutral: stat.neutral + 1 });
-  const handleBad = () => setStat({ ...stat, bad: stat.bad + 1 });
-
+const Anecdote = ({ anecdote, vote }) => {
   return (
     <>
-      <h1>give feedback</h1>
-      <Button text="good" handleClick={handleGood} />
-      <Button text="neutral" handleClick={handleNeutral} />
-      <Button text="bad" handleClick={handleBad} />
-      <h1>statistics</h1>
-      <Statistics good={stat.good} neutral={stat.neutral} bad={stat.bad}/>
+      <p>{anecdote}</p>
+      {vote > 1 ? <p>Has {vote} votes </p> : <p>Has {vote} vote </p>}
     </>
   );
 };
+
+const App = () =>{
+
+  const anecdotes = [
+    'If it hurts, do it more often',
+    'Adding manpower to a late software project makes it later!',
+    'The first 90 percent of the code accounts for the first 90 percent of the development time...The remaining 10 percent of the code accounts for the other 90 percent of the development time.',
+    'Any fool can write code that a computer can understand. Good programmers write code that humans can understand.',
+    'Premature optimization is the root of all evil.',
+    'Debugging is twice as hard as writing the code in the first place. Therefore, if you write the code as cleverly as possible, you are, by definition, not smart enough to debug it.'
+  ]
+  
+  const [selected, setSelected] = useState(0);
+
+  const [votes, setVotes] = useState(Array(6).fill(0));
+
+  // Function with two parenthesis
+  // look more at https://fullstackopen.com/en/part1/a_more_complex_state_debugging_react_apps#function-that-returns-a-function
+
+  const handleAnecdote = (max) => () => {
+    const random = Math.floor(Math.random() * max);
+    console.log('random', random);
+    setSelected(random);
+  };
+
+  const handleVotes = (index) => () => {
+    const copy = [...votes];
+    copy[index] += 1;
+
+    console.log('cpy',copy);
+    setVotes(copy);
+  };
+
+  const maxVote = Math.max(...votes);
+  const maxVoteIndex = votes.indexOf(maxVote);
+
+  return (
+    <div>
+      <h1>Anecdote of the day</h1>
+      <Anecdote anecdote={anecdotes[selected]} vote={votes[selected]} />
+      <button onClick={handleVotes(selected)}>vote</button>
+      <button onClick={handleAnecdote(5)}>next anecdote</button>
+      {maxVote !== 0 ? (
+        <>
+          <h1>Anecdote with most votes</h1>
+          <Anecdote anecdote={anecdotes[maxVoteIndex]} vote={maxVote} />
+        </>
+      ) : (
+        ''
+      )}
+    </div>
+  );
+}
 
 export default App;
