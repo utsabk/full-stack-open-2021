@@ -22,7 +22,7 @@ const PersonForm = (props) => {
         />
       </div>
       <div>
-        <lavbel htmlFor="numberInput">number:</lavbel>{' '}
+        <label htmlFor="numberInput">number:</label>{' '}
         <input
           type="number"
           id="numberInput"
