@@ -1,82 +1,49 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import Filter from './components/Filter';
-import PersonForm from './components/PersonForm';
-import Persons from './components/Persons';
+import Search from './components/Search';
+import Country from './components/Country';
 
 const App = () => {
-  const [persons, setPersons] = useState([]);
 
-  const [newName, setNewName] = useState('');
-  const [newNumber, setNewNumber] = useState('');
-
-  const [filter, setFilter] = useState([]);
+  const[countries, setCountries] = useState([])
+  const[filteredCountries, setFilteredCountries] = useState([])
 
   useEffect(() => {
     axios
-    .get('http://localhost:3001/persons')
+    .get('https://restcountries.eu/rest/v2/all')
     .then((response) => {
-      const persons = response.data;
-      setPersons(persons);
+
+      // add id property to each object in the arry 
+     const output =  response.data.map((country, index) =>  ({...country, id:index}))
+    
+     setCountries(output)
+
     });
   }, []);
-  
 
-
-  const addNewName = (event) => {
-    event.preventDefault();
-    const personObject = {
-      name: newName,
-      number: newNumber,
-      id: persons.length + 1,
-    };
-    setPersons(persons.concat(personObject));
-    setNewName('');
-    setNewNumber('');
-  };
-
-  const handleNewName = (event) => {
-    const name = event.target.value;
-    persons.find((person) => person.name === name)
-      ? window.confirm(`${name} is already added to phonebook`)
-      : setNewName(name);
-  };
-
-  const handleNewNumber = (event) => {
-    const number = event.target.value;
-    setNewNumber(number);
-  };
 
   const handleSearch = (event) => {
-    const search = event.target.value.toLowerCase();
-
-    console.log('Serach text', search);
-
-    const filteredPersons = persons.filter((person) =>
-      person.name.toLowerCase().includes(search)
+    const filter = countries.filter((country) =>
+      country.name.toLowerCase().includes(event.target.value.toLowerCase())
     );
-
-    console.log('filteredPersons', filteredPersons);
-
-    setFilter(filteredPersons);
+    setFilteredCountries(filter);
   };
 
-  const personsToDisplay = filter.length < 1 ? persons : filter;
-
+  const handleClick = (country) => () => {
+    setFilteredCountries([country]);
+  }; 
+  
   return (
     <>
-      <h2>Phonebook</h2>
-      <Filter handleSearch={handleSearch} />
-      <h2>add a new</h2>
-      <PersonForm
-        addNewName={addNewName}
-        newName={newName}
-        newNumber={newNumber}
-        handleNewName={handleNewName}
-        handleNewNumber={handleNewNumber}
-      />
-      <h2>Numbers</h2>
-      <Persons personsToDisplay={personsToDisplay} />
+      <Search handleSearch={handleSearch} />
+      {filteredCountries.length === 1 ? <Country country={filteredCountries[0]} />
+       : filteredCountries.length < 10 ? (
+        filteredCountries.map((country) => (
+          <p key={country.id}>{country.name}<button onClick={handleClick(country)}>Show</button></p>
+        ))
+      ) : (
+        <p>Too many matches, specify another filter</p>
+      )}
     </>
   );
 };
