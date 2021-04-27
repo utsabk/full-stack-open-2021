@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import phonebookSevices from './services/phonebook'
 import Filter from './components/Filter';
 import PersonForm from './components/PersonForm';
-import Persons from './components/Persons';
+import Person from './components/Person';
 
 const App = () => {
   const [persons, setPersons] = useState([]);
@@ -13,33 +13,48 @@ const App = () => {
   const [filter, setFilter] = useState([]);
 
   useEffect(() => {
-    axios
-    .get('http://localhost:3001/persons')
-    .then((response) => {
-      const persons = response.data;
-      setPersons(persons);
-    });
+    phonebookSevices.getAll()
+    .then(persons => setPersons(persons));
   }, []);
   
 
 
   const addNewName = (event) => {
     event.preventDefault();
-    const personObject = {
-      name: newName,
-      number: newNumber,
-      id: persons.length + 1,
-    };
-    setPersons(persons.concat(personObject));
-    setNewName('');
-    setNewNumber('');
+    const duplicateObj = persons.find((person) => person.name === newName);
+    const personObject = { name: newName, number: newNumber };
+
+    if (duplicateObj) {
+      if (
+        window.confirm(
+          `${duplicateObj.name} is already added to phonebook, replace with a new number?`
+        )
+      ) {
+        phonebookSevices
+          .update(duplicateObj.id, personObject)
+          .then((returnedPerson) =>
+            setPersons(
+              persons.map((person) =>
+                person.id !== duplicateObj.id ? person : returnedPerson
+              )
+            )
+          );
+      } else {
+        setNewName('');
+        setNewNumber('');
+      }
+    } else {
+      phonebookSevices.create(personObject).then((returnedObject) => {
+        setPersons(persons.concat(returnedObject));
+        setNewName('');
+        setNewNumber('');
+      });
+    }
   };
 
   const handleNewName = (event) => {
     const name = event.target.value;
-    persons.find((person) => person.name === name)
-      ? window.confirm(`${name} is already added to phonebook`)
-      : setNewName(name);
+    setNewName(name);
   };
 
   const handleNewNumber = (event) => {
@@ -63,6 +78,16 @@ const App = () => {
 
   const personsToDisplay = filter.length < 1 ? persons : filter;
 
+  const handleDelete = (id)=> () =>{
+    phonebookSevices.remove(id).then(response => {
+      if(response){
+        setPersons(persons.filter(person => person.id !== id))
+      }  
+    }).catch(error =>{
+      console.log('error:',error)
+    })
+  }
+
   return (
     <>
       <h2>Phonebook</h2>
@@ -76,7 +101,7 @@ const App = () => {
         handleNewNumber={handleNewNumber}
       />
       <h2>Numbers</h2>
-      <Persons personsToDisplay={personsToDisplay} />
+      {personsToDisplay.map(person => <Person key={person.id} person={person} handleDelete={handleDelete(person.id)} />)}
     </>
   );
 };
