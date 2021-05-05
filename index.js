@@ -5,6 +5,9 @@ const app = express();
 
 app.use(express.json())
 
+app.use(express.static('build'))
+
+
 // custom token formats for morgan
 morgan.token('content', (req) => {
   return JSON.stringify(req.body);
@@ -93,6 +96,6 @@ app.delete('/api/persons/:id', (req, res) => {
   res.sendStatus(204).end();
 });
 
-app.listen(process.env.PORT, () => {
+app.listen(process.env.PORT || 3000, () => {
   console.log(`App is listening on ${process.env.PORT}`);
 });
